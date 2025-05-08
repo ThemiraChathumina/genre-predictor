@@ -2,28 +2,23 @@ package org.example.genreclassifier;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
-import org.springframework.context.ApplicationListener;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-//@SpringBootApplication(exclude = {org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration.class})
+import java.util.Collections;
 
 @SpringBootApplication
-public class GenreClassifierApplication implements ApplicationListener<WebServerInitializedEvent> {
-
-    private static int port;
+public class GenreClassifierApplication {
 
     public static void main(String[] args) throws IOException {
-//        TrainModel.Train();
-        SpringApplication.run(GenreClassifierApplication.class, args);
-        openBrowser("http://localhost:" + port);
-    }
+        // Force Spring Boot to listen on port 5000
+        SpringApplication app = new SpringApplication(GenreClassifierApplication.class);
+        app.setDefaultProperties(Collections.singletonMap("server.port", "5000"));
+        app.run(args);
 
-    @Override
-    public void onApplicationEvent(WebServerInitializedEvent event) {
-        port = event.getWebServer().getPort();
+        // Open browser to localhost:5000
+//        openBrowser("http://localhost:5000");
     }
 
     public static void openBrowser(String url) {
