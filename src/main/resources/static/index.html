@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Genre Predictor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #003C5A, #044455);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+
+
+    h2 {
+      margin: 10px 0 15px;
+    }
+
+    .container {
+      display: flex;
+      gap: 30px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .left {
+      flex: 1;
+      background: linear-gradient(to bottom right, #c5deb9, #e4f4d8);
+      border-radius: 20px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 480px;
+    }
+
+    .left textarea {
+      flex-grow: 1;
+      resize: none;
+      border: none;
+      border-radius: 10px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      background-color: #f9fff7;
+      color: #222;
+      margin-bottom: 10px;
+    }
+
+    .left button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(to right, #299129, #20a020);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .left button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(to right, #3eef3e, #0cc30c);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+
+
+    .right {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .genre-label {
+      background: linear-gradient(to right, #a0f2e1, #d1f9f3);
+      color: #e60000;
+      font-weight: bold;
+      font-size: 28px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-align: center;
+      min-height: 50px;
+    }
+
+    .chart-box {
+      background: linear-gradient(to bottom, #ffffff, #f4f4f4);
+      border-radius: 15px;
+      padding: 20px;
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+    }
+
+    .chart-box canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .loading {
+      font-style: italic;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Enter Lyrics</h2>
+<div class="container">
+  <div class="left">
+    <textarea id="lyricsInput" placeholder="Empty space to enter lyrics..."></textarea>
+    <button onclick="predictGenre()">Predict</button>
+  </div>
+  <div class="right">
+    <div>
+      <h3>Predicted Genre</h3>
+      <div id="predictedGenre" class="genre-label">Genre</div>
+    </div>
+    <div class="chart-box" id="chartBox">
+      <span class="loading">Enter a song lyric to find its genre.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let chart;
+
+  function predictGenre() {
+    const lyrics = document.getElementById('lyricsInput').value.trim();
+    const chartBox = document.getElementById('chartBox');
+    const genreLabel = document.getElementById('predictedGenre');
+
+    if (!lyrics) {
+      genreLabel.textContent = '';
+      chartBox.innerHTML = "<span class='loading'>Please enter some lyrics.</span>";
+      return;
+    }
+
+    // Show loading
+    genreLabel.textContent = '';
+    chartBox.innerHTML = "<span class='loading'>Predicting genre...</span>";
+
+    fetch('/predict', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({lyrics})
+    })
+            .then(response => response.json())
+            .then(data => {
+              genreLabel.textContent = data.predictedLabel.charAt(0).toUpperCase() + data.predictedLabel.slice(1);
+              chartBox.innerHTML = "<canvas id='genreChart'></canvas>";
+              const ctx = document.getElementById('genreChart').getContext('2d');
+
+              const labels = Object.keys(data.probabilities);
+              const values = Object.values(data.probabilities);
+
+              const maxIndex = values.indexOf(Math.max(...values));
+              const barColors = values.map((_, i) => i === maxIndex ? 'red' : '#5bc0de');
+
+              if (chart) chart.destroy();
+              chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: labels,
+                  datasets: [{
+                    label: 'Probability',
+                    data: values,
+                    backgroundColor: barColors
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: 1,
+                      ticks: {
+                        color: '#333'
+                      }
+                    },
+                    x: {
+                      ticks: {
+                        color: '#333'
+                      }
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      labels: {
+                        color: '#333'
+                      }
+                    }
+                  }
+                }
+              });
+            })
+            .catch(err => {
+              genreLabel.textContent = '';
+              chartBox.innerHTML = "<span class='loading'>Error: Could not connect to server.</span>";
+            });
+  }
+</script>
+
+</body>
+</html>

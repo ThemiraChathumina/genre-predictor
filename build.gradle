@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.18'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    sparkVersion = '3.5.5'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+//    implementation 'com.google.code.gson:gson:2.10.1' // or latest
+
+    // ❌ Don't bundle Spark in the JAR
+//    compileOnly "org.apache.spark:spark-core_2.12:${sparkVersion}"
+//    compileOnly "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+//    compileOnly "org.apache.spark:spark-mllib_2.12:${sparkVersion}"
+
+    implementation "org.apache.spark:spark-core_2.12:${sparkVersion}"
+    implementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+    implementation "org.apache.spark:spark-mllib_2.12:${sparkVersion}"
+
+    implementation "com.github.rholder:snowball-stemmer:1.3.0.581.1"
+}
