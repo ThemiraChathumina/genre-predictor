@@ -1,0 +1,69 @@
+openapi: 3.0.3
+info:
+  title: Genre Classifier API
+  version: 1.0.0
+  description: |
+    A simple API for predicting the genre of song lyrics using a pre-trained Spark ML pipeline.
+servers:
+  - url: http://localhost:5000
+paths:
+  /predict:
+    post:
+      summary: Predict the genre of given song lyrics
+      operationId: predictGenre
+      requestBody:
+        description: Lyrics to classify
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictionRequest'
+      responses:
+        '200':
+          description: Successful genre prediction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '400':
+          description: Bad request — missing or invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    PredictionRequest:
+      type: object
+      required:
+        - lyrics
+      properties:
+        lyrics:
+          type: string
+          description: The full text of the song lyrics to classify
+          example: "When you were here before, couldn't look you in the eye..."
+    PredictionResponse:
+      type: object
+      properties:
+        predictedLabel:
+          type: string
+          description: The genre label predicted by the model
+          example: "rock"
+        probabilities:
+          type: object
+          description: A map of genre labels to their predicted probabilities
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            pop: 0.12
+            rock: 0.78
+            hiphop: 0.05
+            jazz: 0.05
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "`lyrics` field is required"
